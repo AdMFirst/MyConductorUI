@@ -44,6 +44,24 @@ const jsonContent = ref(`{
         "type": "simple",
         "position": { "x": 100, "y": 100 },
         "data": { "label": "Start Node" }
+      },
+      {
+        "id": "2",
+        "type": "simple",
+        "position": { "x": 100, "y": 100 },
+        "data": { "label": "Start Node" }
+      },
+      {
+        "id": "3",
+        "type": "simple",
+        "position": { "x": 100, "y": 100 },
+        "data": { "label": "Start Node" }
+      },
+      {
+        "id": "4",
+        "type": "simple",
+        "position": { "x": 100, "y": 100 },
+        "data": { "label": "Start Node" }
       }
     ],
     "edges": []
