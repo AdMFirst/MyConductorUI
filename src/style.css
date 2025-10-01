@@ -1,1 +1,104 @@
 @import "tailwindcss";
+
+/* =========================
+   Neobrutalism Theme Colors
+   ========================= */
+:root {
+  --nb-white: #ffffff;
+  --nb-black: #000000;
+  --nb-text: #000000;
+
+  /* Accent Colors */
+  --nb-primary: #41db79;   /* lime green */
+  --nb-secondary: #5bc0eb; /* bright sky blue */
+
+  /* Backgrounds */
+  --nb-body-bg: #f8f8f8;
+  --nb-grid-line: rgba(0, 0, 0, 0.1);
+}
+
+/* =========================
+   Neobrutalism Core Styles
+   ========================= */
+.neobrutalism {
+  background: var(--nb-white);
+  border: 3px solid var(--nb-black);
+  border-radius: 8px;
+  box-shadow:
+    4px 4px 0px var(--nb-black),
+    0px 0px 0px 0px var(--nb-black);
+  position: relative;
+}
+
+.neobrutalism-button {
+  background: var(--nb-white);
+  border: 2px solid var(--nb-black);
+  border-radius: 4px;
+  padding: 8px 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow:
+    2px 2px 0px var(--nb-black),
+    0px 0px 0px 0px var(--nb-black);
+  color: var(--nb-text);
+  transition: all 0.1s ease;
+}
+
+.neobrutalism-button:hover {
+  box-shadow:
+    4px 4px 0px var(--nb-black),
+    0px 0px 0px 0px var(--nb-black);
+  transform: translate(-1px, -1px);
+}
+
+.neobrutalism-button:active {
+  box-shadow:
+    1px 1px 0px var(--nb-black),
+    0px 0px 0px 0px var(--nb-black);
+  transform: translate(1px, 1px);
+}
+
+.neobrutalism-input {
+  background: var(--nb-white);
+  border: 2px solid var(--nb-black);
+  border-radius: 4px;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 14px;
+  box-shadow:
+    2px 2px 0px var(--nb-black),
+    0px 0px 0px 0px var(--nb-black);
+  color: var(--nb-text);
+}
+
+.neobrutalism-input:focus {
+  outline: none;
+  box-shadow:
+    2px 2px 0px var(--nb-black),
+    0px 0px 0px 0px var(--nb-black);
+  transition: all 0.1s ease;
+}
+
+/* =========================
+   Accent Utilities
+   ========================= */
+.neobrutalism-primary {
+  background-color: var(--nb-primary);
+  color: var(--nb-black);
+}
+
+.neobrutalism-secondary {
+  background-color: var(--nb-secondary);
+  color: var(--nb-black);
+}
+
+/* =========================
+   Page Background
+   ========================= */
+body {
+  background-image:
+    linear-gradient(var(--nb-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--nb-grid-line) 1px, transparent 1px);
+  background-size: 20px 20px;
+  background-color: var(--nb-body-bg);
+}
