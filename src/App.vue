@@ -29,7 +29,7 @@ const WORKFLOW_VERSION = 1
 const WORKFLOW_SCHEMA_VERSION = 2
 const WORKFLOW_NAME_PREFIX = 'myconductorui-generated'
 
-const API_BASE = "http://localhost:8080/api"
+const API_BASE = import.meta.env.VITE_API_BASE ?? ""
 
 const workflowName = ref(makeWorkflowName())
 
@@ -134,7 +134,13 @@ function buildWorkflow() {
 async function processWorkflow() {
   isProcessing.value = true
 
-  var result = await axios.put(API_BASE+"/api/metadata/workflow", JSON.stringify(buildWorkflow(), null, 2));
+  var result = await axios.put(
+    API_BASE+"/api/metadata/workflow", 
+    JSON.stringify(buildWorkflow(), null, 2),
+    {
+      headers: { 'Content-Type': 'application/json' }
+    }
+  );
 
   if (result.status != 200) {
     console.error(result.data)
