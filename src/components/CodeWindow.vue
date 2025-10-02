@@ -1,7 +1,8 @@
 <template>
   <div class="neobrutalism h-[95vh] w-full flex flex-col mx-3">
-    <div class="p-4 border-b-2 border-black neobrutalism-primary">
-      <h3 class="text-lg font-bold">Generated JSON</h3>
+    <div class="p-4 border-b-2 border-black rounded-t-md neobrutalism-primary">
+      <h1 class="text-lg font-bold">MyConductorUI</h1>
+      <h2 class="text-sm">Create conductor scripts using a simple interface</h2>
     </div>
     
     <div class="flex-1 p-4">

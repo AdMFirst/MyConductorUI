@@ -11,6 +11,10 @@
   /* Accent Colors */
   --nb-primary: #41db79;   /* lime green */
   --nb-secondary: #5bc0eb; /* bright sky blue */
+  --nb-tertiary: #f7b32b; /* warm amber */
+  --nb-quaternary: #ff477e; /* vibrant pink */
+  --nb-quinary: #c9a3ff; /* pastel lavender */
+
 
   /* Backgrounds */
   --nb-body-bg: #f8f8f8;
@@ -89,6 +93,21 @@
 
 .neobrutalism-secondary {
   background-color: var(--nb-secondary);
+  color: var(--nb-black);
+}
+
+.neobrutalism-tertiary {
+  background-color: var(--nb-tertiary);
+  color: var(--nb-black);
+}
+
+.neobrutalism-quaternary {
+  background-color: var(--nb-quaternary);
+  color: var(--nb-black);
+}
+
+.neobrutalism-quinary {
+  background-color: var(--nb-quinary);
   color: var(--nb-black);
 }
 
