@@ -1,22 +1,104 @@
-<script setup lang="ts">
-import { reactive, ref } from 'vue';
+﻿<script setup lang="ts">
+import { nextTick, reactive, ref, watch } from 'vue';
 import DiagramNode from '../DiagramNode.vue';
+
+type HttpTaskData = {
+  name: string;
+  reference: string;
+  url: string;
+  method: string;
+  body: string;
+  headers: Array<{ key: string; value: string }>;
+};
+
+type HeaderRow = { id: number; key: string; value: string };
+
+const props = defineProps<{ value: HttpTaskData }>();
+
+const emit = defineEmits<{
+  (e: 'delete'): void;
+  (e: 'change', payload: HttpTaskData): void;
+}>();
 
 const form = reactive({
   name: '',
   reference: '',
   url: '',
   method: 'GET',
-  body: ''
+  body: '',
 });
 
 const methods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'];
 
-const headers = ref([
-  { id: 1, key: '', value: '' }
-]);
-
+const headers = ref<HeaderRow[]>([{ id: 1, key: '', value: '' }]);
 let headerId = 1;
+let syncing = false;
+
+const ensureHeaderRows = (items: Array<{ key: string; value: string }>): HeaderRow[] => {
+  if (!items.length) {
+    headerId = 1;
+    return [{ id: headerId, key: '', value: '' }];
+  }
+
+  return items.map((item, index) => ({
+    id: index + 1,
+    key: item.key,
+    value: item.value,
+  }));
+};
+
+const applyProps = (value: HttpTaskData) => {
+  syncing = true;
+  form.name = value?.name ?? '';
+  form.reference = value?.reference ?? '';
+  form.url = value?.url ?? '';
+  form.method = value?.method ?? 'GET';
+  form.body = value?.body ?? '';
+
+  const nextHeaders = ensureHeaderRows(value?.headers ?? []);
+  headers.value = nextHeaders;
+  headerId = headers.value.reduce((max, item) => Math.max(max, item.id), 0) || 1;
+
+  nextTick(() => {
+    syncing = false;
+  });
+};
+
+// For receiving data from parents
+// Since the 'real' data is saved on parents
+watch(
+  () => props.value,
+  (value) => {
+    applyProps(
+      value ?? {
+        name: '',
+        reference: '',
+        url: '',
+        method: 'GET',
+        body: '',
+        headers: [],
+      }
+    );
+  },
+  { deep: true, immediate: true }
+);
+
+// For sending data to parents
+const emitSnapshot = () => {
+  if (syncing) return;
+  emit('change', {
+    name: form.name,
+    reference: form.reference,
+    url: form.url,
+    method: form.method,
+    body: form.body,
+    headers: headers.value.map(({ key, value }) => ({ key, value })),
+  });
+};
+
+// Trigger sending data to parents everytime form or headers changed
+watch(form, emitSnapshot, { deep: true });
+watch(headers, emitSnapshot, { deep: true });
 
 const addHeader = () => {
   headerId += 1;
@@ -113,8 +195,13 @@ const removeHeader = (id: number) => {
 
     <template #footer>
       <div class="flex justify-end gap-3">
-        <button class="neobrutalism-button">Save</button>
-        <button class="neobrutalism-button neobrutalism-secondary">Delete</button>
+        <button
+          type="button"
+          class="neobrutalism-button neobrutalism-secondary"
+          @click="emit('delete')"
+        >
+          Delete
+        </button>
       </div>
     </template>
   </DiagramNode>

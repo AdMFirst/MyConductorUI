@@ -1,11 +1,51 @@
-<script setup lang="ts">
-import { reactive } from 'vue';
+﻿<script setup lang="ts">
+import { nextTick, reactive, watch } from 'vue';
 import DiagramNode from '../DiagramNode.vue';
 
-const form = reactive({
+type SimpleTaskData = { name: string; reference: string };
+
+const props = defineProps<{ value: SimpleTaskData }>();
+
+const emit = defineEmits<{
+  (e: 'delete'): void;
+  (e: 'change', payload: SimpleTaskData): void;
+}>();
+
+const form = reactive<SimpleTaskData>({
   name: '',
   reference: '',
 });
+
+let syncing = false;
+
+const applyProps = (value: SimpleTaskData) => {
+  syncing = true;
+  form.name = value?.name ?? '';
+  form.reference = value?.reference ?? '';
+  nextTick(() => {
+    syncing = false;
+  });
+};
+
+// For receiving data from parents
+// Since the 'real' data is saved on parents
+watch(
+  () => props.value,
+  (value) => {
+    applyProps(value ?? { name: '', reference: '' });
+  },
+  { deep: true, immediate: true }
+);
+
+// For sending data to parents
+watch(
+  form,
+  () => {
+    if (syncing) return;
+    emit('change', { name: form.name, reference: form.reference });
+  },
+  { deep: true }
+);
 </script>
 
 <template>
@@ -34,8 +74,13 @@ const form = reactive({
 
     <template #footer>
       <div class="flex justify-end gap-3">
-        <button class="neobrutalism-button">Save</button>
-        <button class="neobrutalism-button neobrutalism-secondary">Delete</button>
+        <button
+          type="button"
+          class="neobrutalism-button neobrutalism-secondary"
+          @click="emit('delete')"
+        >
+          Delete
+        </button>
       </div>
     </template>
   </DiagramNode>
