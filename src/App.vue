@@ -132,11 +132,15 @@ function buildWorkflow() {
 }
 
 async function processWorkflow() {
+  if (nodes.value.length < 1 ){
+    return
+  }
+
   isProcessing.value = true
 
   var result = await axios.put(
     API_BASE+"/api/metadata/workflow", 
-    JSON.stringify(buildWorkflow(), null, 2),
+    JSON.stringify([buildWorkflow()], null, 2),
     {
       headers: { 'Content-Type': 'application/json' }
     }
@@ -158,7 +162,7 @@ async function processWorkflow() {
     return
   }
 
-  generatedJson.value = realJson.data
+  generatedJson.value = JSON.stringify(realJson.data, null, 2);
   isProcessing.value = false
 }
 
