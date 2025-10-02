@@ -1,69 +1,161 @@
 ﻿<!-- Copyright (c) 2025 Aditya Mardi Pratama (AdMFirst) - All Rights Reserved -->
 <script setup lang="ts">
 import { ref, nextTick, onBeforeUnmount } from 'vue'
+
 import CodeWindow from './components/CodeWindow.vue'
 import Edge from './components/Edge.vue'
 import HttpNode from './components/NodeTypes/HttpNode.vue'
 import InlineNode from './components/NodeTypes/InlineNode.vue'
 import SimpleNode from './components/NodeTypes/SimpleNode.vue'
 import StaticNode from './components/NodeTypes/StaticNode.vue'
+import axios from 'axios'
 
-// map node type -> component
-const nodeComponentMap: any = {
+const nodeComponentMap: Record<string, any> = {
   http: HttpNode,
   inline: InlineNode,
-  simple: SimpleNode
+  simple: SimpleNode,
 }
 
-// state
 const nodes = ref<any[]>([])
 const generatedJson = ref('')
 const isProcessing = ref(false)
 let processTimer: number | null = null
 
-// defaults
 const DEFAULT_METHOD = 'GET'
-const DEFAULT_HEADERS = [{ key: '', value: '' }]
-const PROCESS_DEBOUNCE_MS = 600 
+const PROCESS_DEBOUNCE_MS = 800
 
-// create node with default data
-function makeNode(type: string) {
-  let data: any = {}
-  if (type === 'simple') {
-    data = { name: '', reference: '' }
-  } else if (type === 'inline') {
-    data = { name: '', reference: '', code: '' }
-  } else if (type === 'http') {
-    data = { name: '', reference: '', url: '', method: DEFAULT_METHOD, body: '', headers: [...DEFAULT_HEADERS] }
-  }
-  return { type, data }
+const WORKFLOW_DESCRIPTION = 'A workflow generated with MyConductorUI'
+const WORKFLOW_VERSION = 1
+const WORKFLOW_SCHEMA_VERSION = 2
+const WORKFLOW_NAME_PREFIX = 'myconductorui-generated'
+
+const API_BASE = "http://localhost:8080/api"
+
+const workflowName = ref(makeWorkflowName())
+
+type ConductorTask = { [key: string]: unknown }
+
+function makeWorkflowName() {
+  const id =
+    typeof globalThis.crypto !== 'undefined' && typeof globalThis.crypto.randomUUID === 'function'
+      ? globalThis.crypto.randomUUID()
+      : Math.random().toString(36).slice(2)
+  return `${WORKFLOW_NAME_PREFIX}-${id}`
 }
 
-// build workflow JSON
-async function processWorkflow() {
-  var createdAt = localStorage.getItem('creation-time');
-  if (!createdAt){
-    createdAt = new Date().toISOString();
-    localStorage.setItem('creation-time', createdAt);
+function makeNode(type: string) {
+  if (type === 'simple') {
+    return { type, data: { name: '', reference: '' } }
   }
-
-  isProcessing.value = true
-  await new Promise(r => setTimeout(r, 8000)) // fake delay
-  const workflow: any = {
-    nodes: [
-      ...nodes.value.map((n, i) => ({ id: i, type: n.type, order: i + 1, config: n.data })),
-    ],
-    summary: {
-      totalSteps: nodes.value.length,
-      createdAt: createdAt,
-      lastUpdated: new Date().toISOString()
+  if (type === 'inline') {
+    return { type, data: { name: '', reference: '', code: '' } }
+  }
+  if (type === 'http') {
+    return {
+      type,
+      data: {
+        name: '',
+        reference: '',
+        url: '',
+        method: DEFAULT_METHOD,
+        body: '',
+      },
     }
   }
-  generatedJson.value = JSON.stringify({ workflow }, null, 2)
+  return { type, data: {} }
+}
+
+const parseBodyValue = (payload: string): unknown | undefined => {
+  const trimmed = payload?.trim()
+  if (!trimmed) return undefined
+  try {
+    return JSON.parse(trimmed)
+  } catch {
+    return trimmed
+  }
+}
+
+function buildTask(node: any, index: number): ConductorTask | null {
+  const name = (node?.data?.name ?? '').trim() || `Step ${index + 1}`
+  const reference = (node?.data?.reference ?? '').trim() || `task${index + 1}`
+
+  if (node.type === 'http') {
+    const httpRequest: Record<string, unknown> = {
+      uri: (node?.data?.url ?? '').trim(),
+      method: (node?.data?.method ?? DEFAULT_METHOD).toUpperCase(),
+    }
+    const bodyValue = parseBodyValue(node?.data?.body ?? '')
+    if (bodyValue !== undefined) httpRequest.body = bodyValue
+
+    return {
+      name,
+      taskReferenceName: reference,
+      type: 'HTTP',
+      inputParameters: { http_request: httpRequest },
+    }
+  }
+
+  if (node.type === 'inline') {
+    return {
+      name,
+      taskReferenceName: reference,
+      type: 'INLINE',
+      scriptExpression: node?.data?.code ?? 'return \'hello world!\'' ,
+    }
+  }
+
+  if (node.type === 'simple') {
+    return {
+      name,
+      taskReferenceName: reference,
+      type: 'SIMPLE',
+      inputParameters: {},
+    }
+  }
+
+  return null
+}
+
+function buildWorkflow() {
+  const tasks = nodes.value
+    .map((node, index) => buildTask(node, index))
+    .filter((task): task is ConductorTask => Boolean(task))
+
+  return {
+    name: workflowName.value,
+    version: WORKFLOW_VERSION,
+    schemaVersion: WORKFLOW_SCHEMA_VERSION,
+    description: WORKFLOW_DESCRIPTION,
+    inputParameters: [],
+    tasks,
+  }
+}
+
+async function processWorkflow() {
+  isProcessing.value = true
+
+  var result = await axios.put(API_BASE+"/api/metadata/workflow", JSON.stringify(buildWorkflow(), null, 2));
+
+  if (result.status != 200) {
+    console.error(result.data)
+    generatedJson.value = "Something went wrong please try again later..."
+    isProcessing.value = false
+    return
+  }
+
+  var realJson = await axios.get(API_BASE+"/api/metadata/workflow/"+workflowName.value)
+
+  if (realJson.status != 200) {
+    console.error(result.data)
+    generatedJson.value = "Something went wrong please try again later..."
+    isProcessing.value = false
+    return
+  }
+
+  generatedJson.value = realJson.data
   isProcessing.value = false
 }
 
-// Schedule the workflow
 function scheduleProcess() {
   if (processTimer !== null) clearTimeout(processTimer)
   processTimer = window.setTimeout(() => {
@@ -72,7 +164,6 @@ function scheduleProcess() {
   }, PROCESS_DEBOUNCE_MS)
 }
 
-// handlers
 function handleAddNode({ position, type }: any) {
   if (position < 0) position = 0
   if (position > nodes.value.length) position = nodes.value.length
@@ -88,7 +179,7 @@ function handleDeleteNode(index: number) {
 function handleNodeChange(index: number, data: any) {
   const node = nodes.value[index]
   if (!node) return
-  node.data = JSON.parse(JSON.stringify(data)) // type safe copy
+  node.data = JSON.parse(JSON.stringify(data))
   scheduleProcess()
 }
 
@@ -96,15 +187,15 @@ async function handleResetWorkflow() {
   generatedJson.value = ''
   isProcessing.value = false
   nodes.value = []
-  localStorage.setItem('creation-time', new Date().toISOString())
+  workflowName.value = makeWorkflowName()
   await nextTick()
   processWorkflow()
 }
 
-// initial
 onBeforeUnmount(() => {
   if (processTimer !== null) clearTimeout(processTimer)
 })
+
 processWorkflow()
 </script>
 
@@ -149,3 +240,4 @@ processWorkflow()
   display: none;
 }
 </style>
+
