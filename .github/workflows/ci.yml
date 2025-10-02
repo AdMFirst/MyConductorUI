@@ -23,8 +23,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9 # or whatever version you need
-          run_install: false
+          version: 9 # specify the pnpm version you want
 
       - name: Install dependencies
         run: pnpm install
