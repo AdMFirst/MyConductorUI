@@ -214,6 +214,30 @@ async function handleResetWorkflow() {
   processWorkflow()
 }
 
+// For testing
+const exposed =
+  import.meta.env.MODE === "test"
+    ? {
+        nodes,
+        generatedJson,
+        isProcessing,
+        workflowName,
+        makeNode,
+        parseBodyValue,
+        buildTask,
+        buildWorkflow,
+        processWorkflow,
+        scheduleProcess,
+        handleAddNode,
+        handleDeleteNode,
+        handleNodeChange,
+        handleResetWorkflow,
+      }
+    : {}
+
+// defineExpose must always be called
+defineExpose(exposed)
+
 onBeforeUnmount(() => {
   if (processTimer !== null) clearTimeout(processTimer)
 })
@@ -262,4 +286,5 @@ processWorkflow()
   display: none;
 }
 </style>
+
 
