@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2025 Aditya Mardi Pratama (AdMFirst) - All Rights Reserved -->
 <script setup lang="ts">
 import { computed, useSlots } from 'vue';
 

@@ -1,4 +1,5 @@
-﻿<script setup lang="ts">
+﻿<!-- Copyright (c) 2025 Aditya Mardi Pratama (AdMFirst) - All Rights Reserved -->
+<script setup lang="ts">
 import { ref, nextTick, onBeforeUnmount } from 'vue'
 import CodeWindow from './components/CodeWindow.vue'
 import Edge from './components/Edge.vue'

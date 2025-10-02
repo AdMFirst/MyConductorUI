@@ -1,4 +1,5 @@
-﻿<template>
+﻿<!-- Copyright (c) 2025 Aditya Mardi Pratama (AdMFirst) - All Rights Reserved -->
+<template>
   <div class="neobrutalism h-full w-full flex flex-col">
     <div class="p-4 border-b-2 border-black rounded-t-md neobrutalism-primary flex items-center justify-between">
       <div>
